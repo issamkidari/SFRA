@@ -1,0 +1,320 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SFRA Projects | Cartographie territoriale</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
+  />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
+  />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="logo-circle" aria-hidden="true">S</div>
+      <div class="title-wrap">
+        <p class="title-overline">Système territorial</p>
+        <h1>SFRA Projects</h1>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <nav class="topbar-nav" aria-label="Navigation principale">
+        <a href="#" class="nav-link" data-view="map" data-nav-item="accueil">Accueil</a>
+        <a href="#" class="nav-link" data-view="projects" data-nav-item="projects">Projets</a>
+        <a href="#" class="nav-link is-active" data-view="map" data-nav-item="map" aria-current="page">Carte</a>
+        <a href="#" class="nav-link" data-view="map" data-nav-item="rapports">Rapports</a>
+      </nav>
+      <button class="btn btn-primary" id="exploreBtn" type="button">Explorer la carte</button>
+    </div>
+  </header>
+
+  <div class="app-shell" id="appShell">
+    <aside class="sidebar" id="sidebar" aria-label="Filtres des projets">
+      <div class="sidebar-header">
+        <h2>Filtres</h2>
+        <button class="icon-btn" id="closeSidebarBtn" type="button" aria-label="Fermer les filtres">✕</button>
+      </div>
+
+      <section class="filter-section" aria-label="Recherche">
+        <label class="field-label" for="projectSearch">Recherche</label>
+        <div class="search-field">
+          <span class="search-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+              <path d="M21 21l-4.35-4.35m1.1-5.15a6.25 6.25 0 11-12.5 0 6.25 6.25 0 0112.5 0z" />
+            </svg>
+          </span>
+          <input id="projectSearch" type="search" placeholder="Rechercher des projets..." autocomplete="off" />
+        </div>
+      </section>
+
+      <section class="filter-section" aria-label="Statut">
+        <h3>Statut</h3>
+        <ul class="status-list">
+          <li><label><input type="checkbox" data-status="attribue" checked />Attribué</label></li>
+          <li><label><input type="checkbox" data-status="en_cours" checked />En cours</label></li>
+          <li><label><input type="checkbox" data-status="litige" checked />En arrêt / litige</label></li>
+          <li><label><input type="checkbox" data-status="acheve" checked />Achevé</label></li>
+          <li><label><input type="checkbox" data-status="reception_provisoire" checked />Réception provisoire</label></li>
+          <li><label><input type="checkbox" data-status="reception_definitive" checked />Réception définitive</label></li>
+        </ul>
+      </section>
+
+      <section class="filter-section" aria-label="Type de projet">
+        <h3>Type</h3>
+        <div class="type-grid">
+          <button class="type-card is-active" data-type="voirie" type="button" aria-pressed="true">
+            <span class="type-icon">🛣</span>
+            <span class="type-label">Voirie</span>
+            <span class="type-tag type-tag-voirie">Bleu</span>
+          </button>
+          <button class="type-card is-active" data-type="batiment" type="button" aria-pressed="true">
+            <span class="type-icon">🏢</span>
+            <span class="type-label">Bâtiment</span>
+            <span class="type-tag type-tag-batiment">Vert</span>
+          </button>
+          <button class="type-card is-active" data-type="equipement" type="button" aria-pressed="true">
+            <span class="type-icon">🏟</span>
+            <span class="type-label">Équipement</span>
+            <span class="type-tag type-tag-equipement">Jaune</span>
+          </button>
+          <button class="type-card is-active" data-type="reseaux" type="button" aria-pressed="true">
+            <span class="type-icon">🔌</span>
+            <span class="type-label">Réseaux</span>
+            <span class="type-tag type-tag-reseaux">Sarcelle</span>
+          </button>
+          <button class="type-card is-active" data-type="renovation" type="button" aria-pressed="true">
+            <span class="type-icon">🧱</span>
+            <span class="type-label">Rénovation</span>
+            <span class="type-tag type-tag-renovation">Orange</span>
+          </button>
+          <button class="type-card is-active" data-type="autres" type="button" aria-pressed="true">
+            <span class="type-icon">📌</span>
+            <span class="type-label">Autres</span>
+            <span class="type-tag type-tag-autres">Gris</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="filter-section" aria-label="Institutions">
+        <h3>Institution</h3>
+        <div class="chip-group" id="institutionChips"></div>
+      </section>
+
+      <section class="filter-section" aria-label="Entreprises">
+        <h3>Entreprise</h3>
+        <div class="search-field search-field-sm">
+          <span class="search-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+              <path d="M21 21l-4.35-4.35m1.1-5.15a6.25 6.25 0 11-12.5 0 6.25 6.25 0 0112.5 0z" />
+            </svg>
+          </span>
+          <input id="enterpriseSearch" type="search" placeholder="Filtrer les entreprises..." autocomplete="off" />
+        </div>
+        <ul class="enterprise-list" id="enterpriseList"></ul>
+      </section>
+
+      <div class="sidebar-footer">
+        <button class="btn btn-outline" id="resetFiltersBtn" type="button">Afficher tous les projets</button>
+      </div>
+    </aside>
+
+    <main class="map-main" id="mapMain">
+      <div id="map" aria-label="Carte territoriale de Fès"></div>
+
+      <button class="mobile-filter-toggle" id="openSidebarBtn" type="button" hidden>Filtres</button>
+
+      <div class="map-overlay map-overlay-topright">
+        <div class="layer-switch" role="group" aria-label="Basculer le fond de carte">
+          <button class="layer-btn is-active" data-layer="plan" type="button">Plan</button>
+          <button class="layer-btn" data-layer="satellite" type="button">Satellite</button>
+        </div>
+      </div>
+
+      <div class="map-overlay map-overlay-bottomleft map-legend" aria-label="Légende cartographique">
+        <h4>Légende</h4>
+        <ul>
+          <li><span class="legend-dot type-voirie"></span>Voirie</li>
+          <li><span class="legend-dot type-batiment"></span>Bâtiment</li>
+          <li><span class="legend-dot type-equipement"></span>Équipement</li>
+          <li><span class="legend-dot type-reseaux"></span>Réseaux</li>
+          <li><span class="legend-dot type-renovation"></span>Rénovation</li>
+          <li><span class="legend-dot type-autres"></span>Autres</li>
+        </ul>
+      </div>
+
+      <aside class="project-panel" id="projectPanel" aria-live="polite" aria-label="Détails du projet">
+        <div class="project-panel-header">
+          <div>
+            <p class="panel-kicker">Projet sélectionné</p>
+            <h2 id="panelTitle">Sélectionnez un projet</h2>
+          </div>
+          <button class="icon-btn" id="closePanelBtn" type="button" aria-label="Fermer le panneau">✕</button>
+        </div>
+
+        <div class="project-panel-body">
+          <div class="panel-badges">
+            <span class="badge" id="panelTypeBadge">Type</span>
+            <span class="badge" id="panelStatusBadge">Statut</span>
+          </div>
+
+          <p class="panel-description" id="panelDescription">
+            Cliquez sur un marqueur pour consulter les informations de gouvernance du projet.
+          </p>
+
+          <dl class="detail-list">
+            <div>
+              <dt>Institution</dt>
+              <dd id="panelInstitution">-</dd>
+            </div>
+            <div>
+              <dt>Entreprise</dt>
+              <dd id="panelEnterprise">-</dd>
+            </div>
+            <div>
+              <dt>Budget</dt>
+              <dd id="panelBudget">-</dd>
+            </div>
+          </dl>
+
+          <section class="progress-block" aria-label="Niveau d'avancement">
+            <div class="progress-head">
+              <span>Avancement</span>
+              <strong id="panelProgressValue">0%</strong>
+            </div>
+            <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+              <div class="progress-fill" id="panelProgressBar"></div>
+            </div>
+          </section>
+
+          <button class="btn btn-primary btn-full" id="expandProjectBtn" type="button">Voir les détails</button>
+
+          <section class="geo-section" aria-label="Données géographiques">
+            <h3>Données géographiques</h3>
+            <ul id="panelGeoList">
+              <li>Zones et éléments affichés ici.</li>
+            </ul>
+          </section>
+        </div>
+      </aside>
+
+      <section class="project-modal" id="projectModal" aria-modal="true" role="dialog" hidden>
+        <div class="project-modal-surface">
+          <header class="project-modal-header">
+            <div>
+              <p class="panel-kicker">Fiche projet complète</p>
+              <h2 id="modalProjectTitle">Détail du projet</h2>
+            </div>
+            <button class="icon-btn" id="closeProjectModalBtn" type="button" aria-label="Fermer la fiche projet">✕</button>
+          </header>
+
+          <div class="project-modal-content">
+            <section class="modal-overview">
+              <div class="panel-badges">
+                <span class="badge" id="modalTypeBadge">Type</span>
+                <span class="badge" id="modalStatusBadge">Statut</span>
+              </div>
+              <p class="panel-description" id="modalDescription">
+                Informations de gouvernance et de pilotage du projet.
+              </p>
+              <dl class="detail-list">
+                <div>
+                  <dt>Institution</dt>
+                  <dd id="modalInstitution">-</dd>
+                </div>
+                <div>
+                  <dt>Entreprise</dt>
+                  <dd id="modalEnterprise">-</dd>
+                </div>
+                <div>
+                  <dt>Budget</dt>
+                  <dd id="modalBudget">-</dd>
+                </div>
+              </dl>
+              <section class="progress-block" aria-label="Niveau d'avancement global">
+                <div class="progress-head">
+                  <span>Avancement global</span>
+                  <strong id="modalProgressValue">0%</strong>
+                </div>
+                <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                  <div class="progress-fill" id="modalProgressBar"></div>
+                </div>
+              </section>
+            </section>
+
+            <section class="timeline-section">
+              <h3>Timeline d'avancement</h3>
+              <ol class="timeline-list" id="modalTimelineList"></ol>
+            </section>
+
+            <section class="media-section">
+              <h3>Photos & vidéos du projet</h3>
+              <div class="media-grid" id="modalMediaGrid"></div>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <div class="map-backdrop" id="mapBackdrop" hidden></div>
+    </main>
+  </div>
+
+  <section class="projects-page" id="projectsPage" hidden>
+    <div class="projects-filterbar">
+      <div class="projects-filter-wrap">
+        <h2>Portefeuille des projets SFRA</h2>
+        <div class="projects-filter-controls">
+          <div class="search-field">
+            <span class="search-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                <path d="M21 21l-4.35-4.35m1.1-5.15a6.25 6.25 0 11-12.5 0 6.25 6.25 0 0112.5 0z" />
+              </svg>
+            </span>
+            <input id="projectsSearchInput" type="search" placeholder="Rechercher un projet..." autocomplete="off" />
+          </div>
+          <select id="projectsStatusSelect" aria-label="Filtrer par statut">
+            <option value="all">Tous les statuts</option>
+          </select>
+          <select id="projectsTypeSelect" aria-label="Filtrer par type">
+            <option value="all">Tous les types</option>
+          </select>
+          <select id="projectsInstitutionSelect" aria-label="Filtrer par institution">
+            <option value="all">Toutes les institutions</option>
+          </select>
+          <button class="btn btn-outline" id="resetProjectPageFiltersBtn" type="button">Réinitialiser</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="projects-content">
+      <div class="projects-content-head">
+        <p id="projectsResultCount">0 projets affichés</p>
+      </div>
+      <div class="projects-grid" id="projectsGrid"></div>
+    </div>
+  </section>
+
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
